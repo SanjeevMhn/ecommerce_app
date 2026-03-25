@@ -1,5 +1,6 @@
 import 'package:ecommerce_app/controllers/favorites_controller.dart';
 import 'package:ecommerce_app/models/ProductListModel.dart';
+import 'package:ecommerce_app/screens/home/custom_floating_button_location.dart';
 import 'package:ecommerce_app/services/product_service.dart';
 import 'package:ecommerce_app/widgets/category_button.dart';
 import 'package:ecommerce_app/widgets/product_card.dart';
@@ -15,11 +16,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<Product> products = [];
+  int page = 0;
+  bool loading = false;
+  bool _showBackToTop = false;
   late Future<Productlistmodel> productList;
   late Future<List<String>> categories;
 
   String activeCategory = 'all';
   TextEditingController searchText = TextEditingController();
+  ScrollController scrollController = ScrollController();
 
   final FavoritesController favoritesController = Get.put(
     FavoritesController(),
@@ -27,53 +33,117 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    productList = ProductService().getProducts();
-    categories = ProductService().getProductCategories();
     super.initState();
+    addProducts();
+    categories = ProductService().getProductCategories();
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+          scrollController.position.maxScrollExtent * 0.9) {
+        setState(() {
+          page++;
+        });
+        addProducts();
+      }
+
+      if (scrollController.offset > 500) {
+        if (_showBackToTop == false) {
+          setState(() => _showBackToTop = true);
+        }
+      } else {
+        if (_showBackToTop == true) {
+          setState(() => _showBackToTop = false);
+        }
+      }
+    });
+  }
+
+  Future<void> addProducts({String? category, String? search}) async {
+    try {
+      final productlistmodel = await ProductService().getProducts(
+        page: page,
+        category: category,
+        search: search,
+      );
+      setState(() {
+        loading = false;
+        products.addAll(productlistmodel.products);
+      });
+    } catch (e) {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   Future<void> handleRefresh() async {
     setState(() {
       activeCategory = 'all';
       categories = ProductService().getProductCategories();
-      productList = ProductService().getProducts();
+      setState(() => page = 0);
+      addProducts();
     });
   }
 
   void onCategoryClick(String cat) {
     setState(() {
       activeCategory = cat;
-      productList = ProductService().getProductsByCategory(cat);
+      products = [];
     });
+      addProducts(category: cat);
   }
 
   void onSearch(String search) {
     setState(() {
-      productList = ProductService().getProductsBySearch(search);
+      products = [];
     });
+    addProducts(search: search);
   }
 
   void onGetAllProducts() {
     setState(() {
       activeCategory = 'all';
-      productList = ProductService().getProducts();
+      setState(() {
+        products = [];
+        page = 0;
+      });
+      addProducts();
     });
+  }
+
+  void scrollToTop() {
+    scrollController.animateTo(
+      0,
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
   void dispose() {
     searchText.dispose();
+    scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButtonLocation: CustomFloatingButtonLocation(),
+      floatingActionButton: _showBackToTop
+          ? FloatingActionButton(
+              onPressed: scrollToTop,
+              mini: true,
+              backgroundColor: Color(0xFF121111),
+              shape: CircleBorder(),
+              child: Icon(Icons.arrow_upward, color: Colors.white,),
+            )
+          : null,
       backgroundColor: Colors.white,
       body: RefreshIndicator(
         color: Color(0xFF121111),
         onRefresh: handleRefresh,
         child: SingleChildScrollView(
+          controller: scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           child: SafeArea(
             child: Padding(
@@ -218,59 +288,46 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                   SizedBox(height: 25.h),
-                  FutureBuilder<Productlistmodel>(
-                    future: productList,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: const CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Error ${snapshot.error}'));
-                      }
+                  if (loading) Center(child: const CircularProgressIndicator()),
+                  if (!loading && products.isEmpty)
+                    Center(child: Text('No products found.')),
 
-                      if (snapshot.hasData) {
-                        final data = snapshot.data;
-                        final products = data!.products;
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                                childAspectRatio: 0.5,
+                  if (!loading && products.isNotEmpty)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.5,
+                          ),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return ProductCard(
+                          id: product.id,
+                          title: product.title,
+                          category: product.category,
+                          image: product.thumbnail,
+                          price: product.price,
+                          toggleFavorite: () {
+                            final bool result = favoritesController
+                                .toggleFavorite(product);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(seconds: 2),
+                                content: result
+                                    ? Text('Added to favorites')
+                                    : Text('Removed from favorites'),
                               ),
-                          itemCount: products.length,
-                          itemBuilder: (context, index) {
-                            final product = products[index];
-                            return ProductCard(
-                              id: product.id,
-                              title: product.title,
-                              category: product.category,
-                              image: product.thumbnail,
-                              price: product.price,
-                              toggleFavorite: () {
-                                final bool result = favoritesController
-                                    .toggleFavorite(product);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    behavior: SnackBarBehavior.floating,
-                                    duration: Duration(seconds: 2),
-                                    content: result
-                                        ? Text('Added to favorites')
-                                        : Text('Removed from favorites'),
-                                  ),
-                                );
-                              },
                             );
                           },
                         );
-                      }
-
-                      return Center(child: Text('No products found.'));
-                    },
-                  ),
+                      },
+                    ),
                 ],
               ),
             ),

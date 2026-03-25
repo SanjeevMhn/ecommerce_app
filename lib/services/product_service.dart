@@ -5,9 +5,19 @@ import 'package:ecommerce_app/models/ProductListModel.dart';
 class ProductService {
   final Dio _dio = DioClient.instance;
 
-  Future<Productlistmodel> getProducts() async {
+  Future<Productlistmodel> getProducts({
+    int page = 0,
+    String? category,
+    String? search,
+  }) async {
     try {
-      final response = await _dio.get('/products?limit=6');
+      final int skip = page * 6;
+      final String url = category != null
+          ? '/products/category/$category?limit=6&skip=$skip'
+          : search != null
+          ? '/products/search?q=$search&limit=6&skip=$skip'
+          : '/products?limit=6&skip=$skip';
+      final response = await _dio.get(url);
       var data = response.data;
       return Productlistmodel.fromJson(data);
     } on DioException catch (e) {

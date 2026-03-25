@@ -4,6 +4,7 @@ import 'package:ecommerce_app/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
@@ -37,7 +38,13 @@ class FavoritesScreen extends StatelessWidget {
                       child: Center(
                         child: IconButton(
                           padding: EdgeInsets.zero,
-                          onPressed: () {},
+                          onPressed: () {
+                            if(context.canPop()){
+                              context.pop();
+                            }else{
+                              context.go('/');
+                            }
+                          },
                           icon: Icon(Icons.chevron_left),
                           iconSize: 30.r,
                         ),
@@ -56,7 +63,6 @@ class FavoritesScreen extends StatelessWidget {
                 SizedBox(height: 25.h),
                 Obx(() {
                   final List<Product> favs = favoritesController.getFavorites();
-
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
