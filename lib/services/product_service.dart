@@ -25,6 +25,16 @@ class ProductService {
     }
   }
 
+  Future<Product> getProductById(int id) async{
+    try{
+      final response = await _dio.get('/products/$id');
+      var data = response.data;
+      return Product.fromJson(data);
+    }on DioException catch(e){
+      throw handleError(e);
+    }
+  }
+
   Future<Productlistmodel> getProductsByCategory(String category) async {
     try {
       final response = await _dio.get('/products/category/$category?limit=6');

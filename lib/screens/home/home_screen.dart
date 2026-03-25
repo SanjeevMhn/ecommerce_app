@@ -7,6 +7,7 @@ import 'package:ecommerce_app/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -306,25 +307,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: products.length,
                       itemBuilder: (context, index) {
                         final product = products[index];
-                        return ProductCard(
-                          id: product.id,
-                          title: product.title,
-                          category: product.category,
-                          image: product.thumbnail,
-                          price: product.price,
-                          toggleFavorite: () {
-                            final bool result = favoritesController
-                                .toggleFavorite(product);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                behavior: SnackBarBehavior.floating,
-                                duration: Duration(seconds: 2),
-                                content: result
-                                    ? Text('Added to favorites')
-                                    : Text('Removed from favorites'),
-                              ),
-                            );
+                        return InkWell(
+                          onTap: (){
+                            context.go('/product/${product.id}');
                           },
+                          child: ProductCard(
+                            id: product.id,
+                            title: product.title,
+                            category: product.category,
+                            image: product.thumbnail,
+                            price: product.price,
+                            toggleFavorite: () {
+                              final bool result = favoritesController
+                                  .toggleFavorite(product);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 2),
+                                  content: result
+                                      ? Text('Added to favorites')
+                                      : Text('Removed from favorites'),
+                                ),
+                              );
+                            },
+                          ),
                         );
                       },
                     ),

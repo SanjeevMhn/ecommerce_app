@@ -35,7 +35,9 @@ class ProductReview {
 
   factory ProductReview.fromJson(Map<String, dynamic> json) {
     return ProductReview(
-      rating: json['rating'],
+      rating: json['rating'] is int
+          ? json['rating']
+          : int.parse(json['rating'].toString()),
       comment: json['comment'] ?? '',
       date: json['date'],
       reviewerName: json['reviewerName'] ?? '',
@@ -124,25 +126,31 @@ class Product {
     var images = List<String>.from(json['images']);
 
     return Product(
-      id: json['id'],
+      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       category: json['category'] ?? '',
       price: json['price'],
       discountPercentage: json['discountPercentage'],
       rating: json['rating'],
-      stock: json['stock'],
+      stock: json['stock'] is int
+          ? json['stock']
+          : int.parse(json['stock'].toString()),
       tags: tags,
       brand: json['brand'] ?? '',
       sku: json['sku'] ?? '',
-      weight: json['weight'],
+      weight: json['weight'] is int
+          ? json['weight']
+          : int.parse(json['weight'].toString()),
       dimensions: ProductDimensions.fromJson(dimensions),
       warrantyInformation: json['warrantyInformation'] ?? '',
       shippingInformation: json['shippingInformation'] ?? '',
       availabilityStatus: json['availabilityStatus'] ?? '',
       reviews: reviews.map((review) => ProductReview.fromJson(review)).toList(),
       returnPolicy: json['returnPolicy'] ?? '',
-      minimumOrderQuantity: json['minimumOrderQuantity'],
+      minimumOrderQuantity: json['minimumOrderQuantity'] is int
+          ? json['minimumOrderQuantity']
+          : int.parse(json['minimumOrderQuantity'].toString()),
       meta: ProductMeta.fromJson(meta),
       thumbnail: json['thumbnail'],
       images: images,
