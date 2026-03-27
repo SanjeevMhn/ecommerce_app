@@ -2,6 +2,7 @@ import 'package:ecommerce_app/layout/main_layout.dart';
 import 'package:ecommerce_app/screens/cart_screen.dart';
 import 'package:ecommerce_app/screens/favorites_screen.dart';
 import 'package:ecommerce_app/screens/home/home_screen.dart';
+import 'package:ecommerce_app/screens/login_screen.dart';
 import 'package:ecommerce_app/screens/product_detail_screen.dart';
 import 'package:ecommerce_app/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ final GoRouter routes = GoRouter(
           routes: [
             GoRoute(
               path: '/',
+              name: 'home',
               builder: (context, state) => HomeScreen(),
               routes: [
                 GoRoute(
@@ -32,19 +34,24 @@ final GoRouter routes = GoRouter(
                     return Placeholder();
                   },
                 ),
+                GoRoute(
+                  path: 'login',
+                  builder: (context, state) => LoginScreen(),
+                ),
               ],
             ),
           ],
         ),
         StatefulShellBranch(
           routes: [
-            GoRoute(path: '/cart', builder: (context, state) => CartScreen()),
+            GoRoute(path: '/cart', name: 'cart', builder: (context, state) => CartScreen()),
           ],
         ),
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/favorites',
+              name: 'favorites',
               builder: (context, state) => FavoritesScreen(),
             ),
           ],
@@ -53,6 +60,7 @@ final GoRouter routes = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
+              name: 'profile',
               builder: (context, state) => ProfileScreen(),
             ),
           ],

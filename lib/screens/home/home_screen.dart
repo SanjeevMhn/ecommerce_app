@@ -1,12 +1,17 @@
+import 'package:ecommerce_app/controllers/auth_controller.dart';
 import 'package:ecommerce_app/controllers/favorites_controller.dart';
+import 'package:ecommerce_app/helpers/app_helpers.dart';
 import 'package:ecommerce_app/models/ProductListModel.dart';
 import 'package:ecommerce_app/screens/home/custom_floating_button_location.dart';
+import 'package:ecommerce_app/services/auth_service.dart';
 import 'package:ecommerce_app/services/product_service.dart';
 import 'package:ecommerce_app/widgets/category_button.dart';
 import 'package:ecommerce_app/widgets/product_card.dart';
+import 'package:ecommerce_app/widgets/unauthenticated_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -28,9 +33,14 @@ class _HomeScreenState extends State<HomeScreen> {
   TextEditingController searchText = TextEditingController();
   ScrollController scrollController = ScrollController();
 
+  final AuthController authController = Get.put(AuthController());
+
   final FavoritesController favoritesController = Get.put(
     FavoritesController(),
   );
+
+  final AuthService authService = AuthService();
+  final box = GetStorage();
 
   @override
   void initState() {
@@ -89,15 +99,15 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       activeCategory = cat;
       products = [];
-    });
       addProducts(category: cat);
+    });
   }
 
   void onSearch(String search) {
     setState(() {
       products = [];
+      addProducts(search: search);
     });
-    addProducts(search: search);
   }
 
   void onGetAllProducts() {
@@ -136,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mini: true,
               backgroundColor: Color(0xFF121111),
               shape: CircleBorder(),
-              child: Icon(Icons.arrow_upward, color: Colors.white,),
+              child: Icon(Icons.arrow_upward, color: Colors.white),
             )
           : null,
       backgroundColor: Colors.white,
@@ -151,32 +161,50 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: EdgeInsets.all(25.r),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
+                  Obx(() {
+                    final isLoggedIn = authController.isLoggedIn.value;
+                    if (isLoggedIn) {
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            "Hello, Welcome 👋",
-                            style: TextStyle(fontSize: 15.sp),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Hello, Welcome 👋",
+                                style: TextStyle(fontSize: 15.sp),
+                              ),
+                              ?box.read('user') != null
+                                  ? Text(
+                                      AppHelpers.capitalize(
+                                        box.read('user')['username'],
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 25.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )
+                                  : null,
+                            ],
                           ),
-                          Text(
-                            "John Doe",
-                            style: TextStyle(
-                              fontSize: 25.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          ?box.read('user') != null
+                              ? CircleAvatar(
+                                  radius: 22.r,
+                                  backgroundColor: Colors.blueAccent,
+                                  child: Image.network(
+                                    box.read('user')['image'],
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : null,
                         ],
-                      ),
-                      CircleAvatar(
-                        radius: 22.r,
-                        backgroundColor: Colors.blueAccent,
-                      ),
-                    ],
-                  ),
+                      );
+                    }
+                    return UnauthenticatedDisplay();
+                  }),
+
                   SizedBox(height: 15.r),
                   Row(
                     spacing: 12.r,
@@ -308,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (context, index) {
                         final product = products[index];
                         return InkWell(
-                          onTap: (){
+                          onTap: () {
                             context.go('/product/${product.id}');
                           },
                           child: ProductCard(

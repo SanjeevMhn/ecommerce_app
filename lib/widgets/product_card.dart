@@ -53,14 +53,16 @@ class _ProductCardState extends State<ProductCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.title,
-                      style: TextStyle(
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.bold,
-                        overflow: TextOverflow.ellipsis,
+                    Expanded(
+                      child: Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontSize: 17.sp,
+                          fontWeight: FontWeight.bold,
+                          // overflow: TextOverflow.ellipsis,
+                        ),
+                        // softWrap: false,
                       ),
-                      softWrap: false,
                     ),
                     Text(
                       widget.category,

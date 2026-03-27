@@ -4,6 +4,7 @@ import 'package:ecommerce_app/services/product_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:go_router/go_router.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -41,6 +42,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void decreaseQuantity() {
     if (quantity > 1) {
       setState(() => quantity--);
+    }
+  }
+
+  void addToCart() {
+    if (GetStorage().read('token') == null) {
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Login'),
+            content: const Text('Login to add products to cart.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.go('/login');
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Login'),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -92,7 +123,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                       if (context.canPop()) {
                                         context.pop();
                                       } else {
-                                        context.go('/');
+                                        context.goNamed('home');
                                       }
                                     },
                                     icon: Icon(Icons.chevron_left),
@@ -152,26 +183,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product!.title,
-                                  style: TextStyle(
-                                    fontSize: 20.r,
-                                    fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product!.title,
+                                    style: TextStyle(
+                                      fontSize: 20.r,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                Row(
-                                  spacing: 5.r,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.star, color: Colors.amber),
-                                    Text(product!.rating.toStringAsFixed(1)),
-                                  ],
-                                ),
-                              ],
+                                  Row(
+                                    spacing: 5.r,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.star, color: Colors.amber),
+                                      Text(product!.rating.toStringAsFixed(1)),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                             Row(
                               spacing: 10.r,
@@ -231,17 +265,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             backgroundColor: Color(0xFF121111),
                             shape: StadiumBorder(),
                           ),
-                          onPressed: () {},
+                          onPressed: addToCart,
                           child: Center(
                             child: Padding(
                               padding: EdgeInsets.all(15.r),
-                              child: Text(
-                                'Add to Cart',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18.sp,
-                                ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                spacing: 10.r,
+                                children: [
+                                  Icon(
+                                    Icons.shopping_cart,
+                                    color: Colors.white,
+                                    size: 20.r,
+                                  ),
+                                  Text(
+                                    'Add to Cart | \$${product!.price.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18.sp,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

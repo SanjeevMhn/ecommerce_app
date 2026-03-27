@@ -1,8 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:ecommerce_app/client/dio_client.dart';
+import 'package:ecommerce_app/mixins/api_handler.dart';
 import 'package:ecommerce_app/models/ProductListModel.dart';
 
-class ProductService {
+class ProductService with ApiHandler {
   final Dio _dio = DioClient.instance;
 
   Future<Productlistmodel> getProducts({
@@ -25,12 +26,12 @@ class ProductService {
     }
   }
 
-  Future<Product> getProductById(int id) async{
-    try{
+  Future<Product> getProductById(int id) async {
+    try {
       final response = await _dio.get('/products/$id');
       var data = response.data;
       return Product.fromJson(data);
-    }on DioException catch(e){
+    } on DioException catch (e) {
       throw handleError(e);
     }
   }
@@ -63,16 +64,5 @@ class ProductService {
     } on DioException catch (e) {
       throw handleError(e);
     }
-  }
-
-  String handleError(DioException e) {
-    if (e.type == DioExceptionType.connectionTimeout) {
-      return "Connection timed out. Check your internet.";
-    } else if (e.response?.statusCode == 404) {
-      return "Product not found.";
-    } else if (e.response?.statusCode == 401) {
-      return "Please login to perform this action.";
-    }
-    return "Something went wrong. Please try again.";
   }
 }
